@@ -1,0 +1,156 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TodayGrid</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="hero__copy">
+        <p class="hero__eyebrow">TodayGrid</p>
+        <h1>把任务放到首页，把行动放到今天</h1>
+        <p class="hero__text">TodayGrid 是一个偏日常使用的打卡页。你可以按日期记录任务、随手打卡完成，并在首页直接看到今天的推进节奏。</p>
+      </div>
+      <section class="hero__spotlight" aria-label="今日焦点">
+        <p class="hero__spotlight-label">今日焦点</p>
+        <h2 id="focusTaskTitle">先添加一项今天最重要的任务</h2>
+        <p id="focusTaskHint" class="hero__spotlight-text">高优先级未完成任务会出现在这里，帮助你在打开页面时立刻进入状态。</p>
+        <div class="hero__meta">
+          <span class="hero__meta-chip">本地保存</span>
+          <span class="hero__meta-chip">按日期查看</span>
+          <span class="hero__meta-chip">完成即打卡</span>
+        </div>
+      </section>
+    </header>
+
+    <main class="workspace">
+      <section class="task-board panel">
+        <div class="panel__header panel__header--board">
+          <div>
+            <p class="panel__eyebrow">Home</p>
+            <h2>任务清单</h2>
+            <p>首页优先展示清单，减少视线跳跃，今天的任务一进来就能看见。</p>
+          </div>
+          <div class="board-actions">
+            <button type="button" class="ghost-button ghost-button--compact" id="clearCompletedBtn">清除已完成</button>
+          </div>
+        </div>
+
+        <div class="board-toolbar">
+          <div class="filter-group" id="filterGroup" aria-label="任务筛选">
+            <button type="button" class="filter-chip is-active" data-filter="all">全部</button>
+            <button type="button" class="filter-chip" data-filter="pending">未完成</button>
+            <button type="button" class="filter-chip" data-filter="completed">已完成</button>
+          </div>
+          <div class="board-inline-stats">
+            <div>
+              <span>总任务</span>
+              <strong id="totalCount">0</strong>
+            </div>
+            <div>
+              <span>已完成</span>
+              <strong id="completedCount">0</strong>
+            </div>
+            <div>
+              <span>未完成</span>
+              <strong id="pendingCount">0</strong>
+            </div>
+          </div>
+        </div>
+
+        <div id="emptyState" class="empty-state">
+          <div class="empty-state__art"></div>
+          <h3>今天还没有任务</h3>
+          <p>先把最重要的一件事写下来，首页会从空白变成行动清单。</p>
+        </div>
+        <ul id="taskList" class="task-list" aria-live="polite"></ul>
+      </section>
+
+      <aside class="sidebar">
+        <section class="panel panel--date">
+          <div class="panel__header">
+            <p class="panel__eyebrow">Date</p>
+            <h2>日期与视图</h2>
+          </div>
+          <div class="date-panel__head">
+            <p id="selectedDateLabel" class="date-nav__label"></p>
+            <div class="date-switcher">
+              <button type="button" class="ghost-button ghost-button--compact" id="prevDayBtn">前一天</button>
+              <button type="button" class="ghost-button ghost-button--compact" id="nextDayBtn">后一天</button>
+            </div>
+          </div>
+          <input type="date" id="datePicker" aria-label="选择日期">
+        </section>
+
+        <section class="panel summary-card" aria-label="今日概览">
+          <div class="summary-card__top">
+            <p class="summary-card__label">今日完成率</p>
+            <span class="summary-card__pill" id="summaryPill">刚开始</span>
+          </div>
+          <div class="summary-card__rate">
+            <span id="completionRate">0%</span>
+          </div>
+          <div class="progress" aria-hidden="true">
+            <div class="progress__bar" id="progressBar"></div>
+          </div>
+          <p id="summaryText" class="summary-card__text">今天还没有任务，先添加一项开始吧。</p>
+        </section>
+
+        <section class="panel panel--composer">
+          <div class="panel__header">
+            <p class="panel__eyebrow">Compose</p>
+            <h2>新增任务</h2>
+            <p>在右侧录入，左侧立即更新。</p>
+          </div>
+          <form id="taskForm" class="task-form">
+            <label class="field">
+              <span>任务名称</span>
+              <input type="text" id="titleInput" name="title" maxlength="80" placeholder="例如：完成产品原型图" required>
+            </label>
+            <label class="field">
+              <span>任务备注</span>
+              <textarea id="noteInput" name="note" rows="3" maxlength="200" placeholder="补充说明、截止时间或执行步骤"></textarea>
+            </label>
+            <label class="field">
+              <span>优先级</span>
+              <select id="priorityInput" name="priority">
+                <option value="high">高优先级</option>
+                <option value="medium" selected>中优先级</option>
+                <option value="low">低优先级</option>
+              </select>
+            </label>
+            <div class="task-form__actions">
+              <button type="submit" class="primary-button" id="submitButton">新增任务</button>
+              <button type="button" class="ghost-button hidden" id="cancelEditBtn">取消编辑</button>
+            </div>
+            <p id="formMessage" class="form-message" aria-live="polite"></p>
+          </form>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <template id="taskItemTemplate">
+    <li class="task-item">
+      <button type="button" class="task-check action-toggle" aria-label="切换完成状态"></button>
+      <div class="task-item__main">
+        <div class="task-item__topline">
+          <span class="priority-badge"></span>
+          <span class="task-time"></span>
+        </div>
+        <h3 class="task-title"></h3>
+        <p class="task-note hidden"></p>
+      </div>
+      <div class="task-item__actions">
+        <button type="button" class="ghost-button ghost-button--compact action-edit">编辑</button>
+        <button type="button" class="ghost-button ghost-button--compact action-delete">删除</button>
+      </div>
+    </li>
+  </template>
+
+  <script src="script.js"></script>
+</body>
+</html>
