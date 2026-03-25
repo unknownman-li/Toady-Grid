@@ -7,32 +7,35 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <canvas id="rainScene" class="rain-scene" aria-hidden="true"></canvas>
+  <div class="scene-vignette" aria-hidden="true"></div>
+
   <div class="page-shell">
     <header class="hero">
-      <div class="hero__copy">
+      <div class="hero__copy glass-panel">
         <p class="hero__eyebrow">TodayGrid</p>
-        <h1>把任务放到首页，把行动放到今天</h1>
-        <p class="hero__text">TodayGrid 是一个偏日常使用的打卡页。你可以按日期记录任务、随手打卡完成，并在首页直接看到今天的推进节奏。</p>
+        <h1>雨夜里，也把今天的事一件件完成。</h1>
+        <p class="hero__text">把清单放在首页，把注意力留在当下。TodayGrid 用带雾感的雨天界面承载每日任务，让记录、打卡和回顾都更有氛围。</p>
       </div>
-      <section class="hero__spotlight" aria-label="今日焦点">
+      <section class="hero__spotlight glass-panel" aria-label="今日焦点">
         <p class="hero__spotlight-label">今日焦点</p>
         <h2 id="focusTaskTitle">先添加一项今天最重要的任务</h2>
         <p id="focusTaskHint" class="hero__spotlight-text">高优先级未完成任务会出现在这里，帮助你在打开页面时立刻进入状态。</p>
         <div class="hero__meta">
-          <span class="hero__meta-chip">本地保存</span>
-          <span class="hero__meta-chip">按日期查看</span>
-          <span class="hero__meta-chip">完成即打卡</span>
+          <span class="hero__meta-chip">Rain Mode</span>
+          <span class="hero__meta-chip">Focus First</span>
+          <span class="hero__meta-chip">Daily Check-in</span>
         </div>
       </section>
     </header>
 
     <main class="workspace">
-      <section class="task-board panel">
+      <section class="task-board glass-panel">
         <div class="panel__header panel__header--board">
           <div>
             <p class="panel__eyebrow">Home</p>
             <h2>任务清单</h2>
-            <p>首页优先展示清单，减少视线跳跃，今天的任务一进来就能看见。</p>
+            <p>首页优先展示清单。未完成任务会被自动排在前面，高优先级事项也会更醒目。</p>
           </div>
           <div class="board-actions">
             <button type="button" class="ghost-button ghost-button--compact" id="clearCompletedBtn">清除已完成</button>
@@ -63,14 +66,14 @@
 
         <div id="emptyState" class="empty-state">
           <div class="empty-state__art"></div>
-          <h3>今天还没有任务</h3>
-          <p>先把最重要的一件事写下来，首页会从空白变成行动清单。</p>
+          <h3>今晚的清单还没开始</h3>
+          <p>写下第一件要推进的事，页面就会从雨夜背景变成你的行动面板。</p>
         </div>
         <ul id="taskList" class="task-list" aria-live="polite"></ul>
       </section>
 
       <aside class="sidebar">
-        <section class="panel panel--date">
+        <section class="glass-panel panel panel--date">
           <div class="panel__header">
             <p class="panel__eyebrow">Date</p>
             <h2>日期与视图</h2>
@@ -85,7 +88,7 @@
           <input type="date" id="datePicker" aria-label="选择日期">
         </section>
 
-        <section class="panel summary-card" aria-label="今日概览">
+        <section class="glass-panel panel summary-card" aria-label="今日概览">
           <div class="summary-card__top">
             <p class="summary-card__label">今日完成率</p>
             <span class="summary-card__pill" id="summaryPill">刚开始</span>
@@ -99,7 +102,27 @@
           <p id="summaryText" class="summary-card__text">今天还没有任务，先添加一项开始吧。</p>
         </section>
 
-        <section class="panel panel--composer">
+        <section class="glass-panel panel panel--audio" aria-label="雨天氛围音乐">
+          <div class="panel__header">
+            <p class="panel__eyebrow">Atmosphere</p>
+            <h2>雨天氛围音</h2>
+            <p>内置柔和环境音与雨声混合。首次播放需要你手动点一次开始。</p>
+          </div>
+          <div class="audio-widget">
+            <button type="button" class="primary-button" id="audioToggleBtn">开启氛围音</button>
+            <div class="audio-volume">
+              <label for="audioVolume">音量</label>
+              <input type="range" id="audioVolume" min="0" max="100" value="40">
+            </div>
+            <p id="audioStatus" class="audio-status">当前已静音。点击后会播放雨声、低频环境铺底和柔和和声。</p>
+            <div class="audio-links">
+              <a href="https://pixabay.com/music/modern-classical-raining-ambient-calm-piano-music-full-version-111325/" target="_blank" rel="noreferrer">参考曲 1</a>
+              <a href="https://pixabay.com/music/ambient-rain-ambient-music-342194/" target="_blank" rel="noreferrer">参考曲 2</a>
+            </div>
+          </div>
+        </section>
+
+        <section class="glass-panel panel panel--composer">
           <div class="panel__header">
             <p class="panel__eyebrow">Compose</p>
             <h2>新增任务</h2>
