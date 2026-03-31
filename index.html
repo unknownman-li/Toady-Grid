@@ -11,34 +11,31 @@
   <div class="scene-vignette" aria-hidden="true"></div>
 
   <div class="page-shell">
-    <header class="hero">
-      <div class="hero__copy glass-panel">
+    <header class="masthead glass-panel">
+      <div class="masthead__brand">
         <p class="hero__eyebrow">TodayGrid</p>
-        <h1>雨夜里，也把今天的事一件件完成。</h1>
-        <p class="hero__text">把清单放在首页，把注意力留在当下。TodayGrid 用带雾感的雨天界面承载每日任务，让记录、打卡和回顾都更有氛围。</p>
+        <h1>Rainy Focus Workspace</h1>
       </div>
-      <section class="hero__spotlight glass-panel" aria-label="今日焦点">
-        <p class="hero__spotlight-label">今日焦点</p>
-        <h2 id="focusTaskTitle">先添加一项今天最重要的任务</h2>
-        <p id="focusTaskHint" class="hero__spotlight-text">高优先级未完成任务会出现在这里，帮助你在打开页面时立刻进入状态。</p>
-        <div class="hero__meta">
-          <span class="hero__meta-chip">Rain Mode</span>
-          <span class="hero__meta-chip">Focus First</span>
-          <span class="hero__meta-chip">Daily Check-in</span>
-        </div>
-      </section>
+      <p class="masthead__summary">在雨夜氛围里安排今天的任务、完成打卡，并把注意力留在真正要推进的事情上。</p>
+      <div class="masthead__meta">
+        <span class="hero__meta-chip">Local First</span>
+        <span class="hero__meta-chip">Task Check-in</span>
+        <span class="hero__meta-chip">Rain Atmosphere</span>
+      </div>
     </header>
 
     <main class="workspace">
       <section class="task-board glass-panel">
-        <div class="panel__header panel__header--board">
+        <div class="board-intro">
           <div>
-            <p class="panel__eyebrow">Home</p>
+            <p class="panel__eyebrow">Workspace</p>
             <h2>任务清单</h2>
-            <p>首页优先展示清单。未完成任务会被自动排在前面，高优先级事项也会更醒目。</p>
+            <p>未完成任务优先显示，高优先级更靠前。清单是这个界面的主角，其他信息只做辅助。</p>
           </div>
-          <div class="board-actions">
-            <button type="button" class="ghost-button ghost-button--compact" id="clearCompletedBtn">清除已完成</button>
+          <div class="board-intro__focus">
+            <span class="board-intro__label">当前焦点</span>
+            <strong id="focusTaskTitle">先添加一项今天最重要的任务</strong>
+            <p id="focusTaskHint">高优先级未完成任务会出现在这里，帮助你在打开页面时立刻进入状态。</p>
           </div>
         </div>
 
@@ -62,33 +59,36 @@
               <strong id="pendingCount">0</strong>
             </div>
           </div>
+          <div class="board-actions">
+            <button type="button" class="ghost-button ghost-button--compact" id="clearCompletedBtn">清除已完成</button>
+          </div>
         </div>
 
         <div id="emptyState" class="empty-state">
           <div class="empty-state__art"></div>
           <h3>今晚的清单还没开始</h3>
-          <p>写下第一件要推进的事，页面就会从雨夜背景变成你的行动面板。</p>
+          <p>从第一件要推进的事情开始，任务区会立刻接管这个页面。</p>
         </div>
         <ul id="taskList" class="task-list" aria-live="polite"></ul>
       </section>
 
-      <aside class="sidebar">
-        <section class="glass-panel panel panel--date">
-          <div class="panel__header">
-            <p class="panel__eyebrow">Date</p>
-            <h2>日期与视图</h2>
-          </div>
-          <div class="date-panel__head">
-            <p id="selectedDateLabel" class="date-nav__label"></p>
-            <div class="date-switcher">
-              <button type="button" class="ghost-button ghost-button--compact" id="prevDayBtn">前一天</button>
-              <button type="button" class="ghost-button ghost-button--compact" id="nextDayBtn">后一天</button>
+      <aside class="sidebar glass-panel">
+        <section class="sidebar__section sidebar__section--date">
+          <div class="panel__header sidebar__header">
+            <div>
+              <p class="panel__eyebrow">Date</p>
+              <h2>日期与视图</h2>
             </div>
+            <p id="selectedDateLabel" class="date-nav__label"></p>
+          </div>
+          <div class="date-switcher">
+            <button type="button" class="ghost-button ghost-button--compact" id="prevDayBtn">前一天</button>
+            <button type="button" class="ghost-button ghost-button--compact" id="nextDayBtn">后一天</button>
           </div>
           <input type="date" id="datePicker" aria-label="选择日期">
         </section>
 
-        <section class="glass-panel panel summary-card" aria-label="今日概览">
+        <section class="sidebar__section summary-card" aria-label="今日概览">
           <div class="summary-card__top">
             <p class="summary-card__label">今日完成率</p>
             <span class="summary-card__pill" id="summaryPill">刚开始</span>
@@ -102,11 +102,12 @@
           <p id="summaryText" class="summary-card__text">今天还没有任务，先添加一项开始吧。</p>
         </section>
 
-        <section class="glass-panel panel panel--audio" aria-label="雨天氛围音乐">
-          <div class="panel__header">
-            <p class="panel__eyebrow">Atmosphere</p>
-            <h2>雨天氛围音</h2>
-            <p>内置柔和环境音与雨声混合。首次播放需要你手动点一次开始。</p>
+        <section class="sidebar__section panel--audio" aria-label="雨天氛围音乐">
+          <div class="panel__header sidebar__header sidebar__header--compact">
+            <div>
+              <p class="panel__eyebrow">Atmosphere</p>
+              <h2>雨天氛围音</h2>
+            </div>
           </div>
           <div class="audio-widget">
             <button type="button" class="primary-button" id="audioToggleBtn">开启氛围音</button>
@@ -115,18 +116,15 @@
               <input type="range" id="audioVolume" min="0" max="100" value="40">
             </div>
             <p id="audioStatus" class="audio-status">当前已静音。点击后会播放雨声、低频环境铺底和柔和和声。</p>
-            <div class="audio-links">
-              <a href="https://pixabay.com/music/modern-classical-raining-ambient-calm-piano-music-full-version-111325/" target="_blank" rel="noreferrer">参考曲 1</a>
-              <a href="https://pixabay.com/music/ambient-rain-ambient-music-342194/" target="_blank" rel="noreferrer">参考曲 2</a>
-            </div>
           </div>
         </section>
 
-        <section class="glass-panel panel panel--composer">
-          <div class="panel__header">
-            <p class="panel__eyebrow">Compose</p>
-            <h2>新增任务</h2>
-            <p>在右侧录入，左侧立即更新。</p>
+        <section class="sidebar__section panel--composer">
+          <div class="panel__header sidebar__header sidebar__header--compact">
+            <div>
+              <p class="panel__eyebrow">Compose</p>
+              <h2>新增任务</h2>
+            </div>
           </div>
           <form id="taskForm" class="task-form">
             <label class="field">
