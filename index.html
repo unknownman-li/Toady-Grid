@@ -14,92 +14,82 @@
     <header class="masthead glass-panel">
       <div class="masthead__brand">
         <p class="hero__eyebrow">TodayGrid</p>
-        <h1>Rainy Focus Workspace</h1>
+        <h1>每月日常记录</h1>
       </div>
-      <p class="masthead__summary">在偏冷的蓝色雨夜里安排任务、推进进度、保留专注。这个界面把清单放到正中央，其余信息只做必要辅助。</p>
+      <p class="masthead__summary">按月查看每一天做过的事情。点进某一天，写下当天实际完成、经历或推进的内容，慢慢积累成完整月份记录。</p>
       <div class="masthead__meta">
-        <span class="hero__meta-chip">Blue Rain UI</span>
-        <span class="hero__meta-chip">Local First</span>
-        <span class="hero__meta-chip">Ambient Focus</span>
+        <span class="hero__meta-chip">Monthly View</span>
+        <span class="hero__meta-chip">Daily Records</span>
+        <span class="hero__meta-chip">Rain Atmosphere</span>
       </div>
     </header>
 
     <main class="workspace">
-      <section class="task-board glass-panel">
-        <div class="board-intro">
-          <div class="board-intro__copy">
-            <p class="panel__eyebrow">Workspace</p>
-            <h2>任务清单</h2>
-            <p>未完成任务会自动排在前面，高优先级事项更醒目。这里是整个页面的主工作区。</p>
+      <section class="calendar-board glass-panel">
+        <div class="calendar-topbar">
+          <div class="calendar-topbar__copy">
+            <p class="panel__eyebrow">Calendar</p>
+            <h2 id="currentMonthLabel">2026年5月</h2>
+            <p>先选月份，再点某一天查看或补充当天做过的事情。</p>
           </div>
-          <div class="board-intro__focus">
-            <span class="board-intro__label">当前焦点</span>
-            <strong id="focusTaskTitle">先添加一项今天最重要的任务</strong>
-            <p id="focusTaskHint">高优先级未完成任务会出现在这里，帮助你在打开页面时立刻进入状态。</p>
-          </div>
-        </div>
-
-        <div class="board-toolbar">
-          <div class="filter-group" id="filterGroup" aria-label="任务筛选">
-            <button type="button" class="filter-chip is-active" data-filter="all">全部</button>
-            <button type="button" class="filter-chip" data-filter="pending">未完成</button>
-            <button type="button" class="filter-chip" data-filter="completed">已完成</button>
-          </div>
-          <div class="board-inline-stats">
-            <div>
-              <span>总任务</span>
-              <strong id="totalCount">0</strong>
-            </div>
-            <div>
-              <span>已完成</span>
-              <strong id="completedCount">0</strong>
-            </div>
-            <div>
-              <span>未完成</span>
-              <strong id="pendingCount">0</strong>
-            </div>
-          </div>
-          <div class="board-actions">
-            <button type="button" class="ghost-button ghost-button--compact" id="clearCompletedBtn">清除已完成</button>
+          <div class="calendar-topbar__actions">
+            <button type="button" class="ghost-button ghost-button--compact" id="prevMonthBtn">上个月</button>
+            <button type="button" class="ghost-button ghost-button--compact" id="todayBtn">回到今天</button>
+            <button type="button" class="ghost-button ghost-button--compact" id="nextMonthBtn">下个月</button>
           </div>
         </div>
 
-        <div id="emptyState" class="empty-state">
-          <div class="empty-state__art"></div>
-          <h3>今晚的清单还没开始</h3>
-          <p>从第一件要推进的事情开始，任务区会立刻接管这个页面。</p>
+        <div class="month-stats" aria-label="月份统计">
+          <div>
+            <span>记录天数</span>
+            <strong id="activeDaysCount">0</strong>
+          </div>
+          <div>
+            <span>本月条目</span>
+            <strong id="entryCount">0</strong>
+          </div>
+          <div>
+            <span>选中日期</span>
+            <strong id="selectedDateShort">-</strong>
+          </div>
         </div>
-        <ul id="taskList" class="task-list" aria-live="polite"></ul>
+
+        <div class="weekday-row" aria-hidden="true">
+          <span>一</span>
+          <span>二</span>
+          <span>三</span>
+          <span>四</span>
+          <span>五</span>
+          <span>六</span>
+          <span>日</span>
+        </div>
+
+        <div id="calendarGrid" class="calendar-grid" aria-label="每月日期视图"></div>
       </section>
 
       <aside class="sidebar glass-panel">
-        <section class="sidebar__section sidebar__section--date">
+        <section class="sidebar__section sidebar__section--selected">
           <div class="panel__header sidebar__header">
             <div>
-              <p class="panel__eyebrow">Date</p>
-              <h2>日期与视图</h2>
+              <p class="panel__eyebrow">Selected Day</p>
+              <h2 id="selectedDateLabel">2026年5月12日 星期二</h2>
             </div>
-            <p id="selectedDateLabel" class="date-nav__label"></p>
+            <p id="selectedDateHint" class="date-nav__label">记录这一天真正做过的事情，而不是计划。</p>
           </div>
-          <div class="date-switcher">
-            <button type="button" class="ghost-button ghost-button--compact" id="prevDayBtn">前一天</button>
-            <button type="button" class="ghost-button ghost-button--compact" id="nextDayBtn">后一天</button>
-          </div>
-          <input type="date" id="datePicker" aria-label="选择日期">
         </section>
 
-        <section class="sidebar__section summary-card" aria-label="今日概览">
+        <section class="sidebar__section summary-card" aria-label="当天概览">
           <div class="summary-card__top">
-            <p class="summary-card__label">今日完成率</p>
-            <span class="summary-card__pill" id="summaryPill">刚开始</span>
+            <p class="summary-card__label">当天记录数</p>
+            <span class="summary-card__pill" id="summaryPill">空白</span>
           </div>
           <div class="summary-card__rate">
-            <span id="completionRate">0%</span>
+            <span id="selectedEntryCount">0</span>
           </div>
           <div class="progress" aria-hidden="true">
             <div class="progress__bar" id="progressBar"></div>
           </div>
-          <p id="summaryText" class="summary-card__text">今天还没有任务，先添加一项开始吧。</p>
+          <p id="summaryText" class="summary-card__text">这一天还没有内容，可以从一件已完成的小事开始记录。</p>
         </section>
 
         <section class="sidebar__section panel--audio" aria-label="雨天氛围音乐">
@@ -122,29 +112,30 @@
         <section class="sidebar__section panel--composer">
           <div class="panel__header sidebar__header sidebar__header--compact">
             <div>
-              <p class="panel__eyebrow">Compose</p>
-              <h2>新增任务</h2>
+              <p class="panel__eyebrow">Write</p>
+              <h2>新增当天记录</h2>
             </div>
           </div>
-          <form id="taskForm" class="task-form">
+          <form id="recordForm" class="task-form">
             <label class="field">
-              <span>任务名称</span>
-              <input type="text" id="titleInput" name="title" maxlength="80" placeholder="例如：完成产品原型图" required>
+              <span>做了什么</span>
+              <input type="text" id="titleInput" name="title" maxlength="100" placeholder="例如：整理项目首页样式" required>
             </label>
             <label class="field">
-              <span>任务备注</span>
-              <textarea id="noteInput" name="note" rows="3" maxlength="200" placeholder="补充说明、截止时间或执行步骤"></textarea>
-            </label>
-            <label class="field">
-              <span>优先级</span>
-              <select id="priorityInput" name="priority">
-                <option value="high">高优先级</option>
-                <option value="medium" selected>中优先级</option>
-                <option value="low">低优先级</option>
+              <span>分类</span>
+              <select id="categoryInput" name="category">
+                <option value="work" selected>工作 / 学习</option>
+                <option value="life">生活</option>
+                <option value="health">健康</option>
+                <option value="idea">想法 / 灵感</option>
               </select>
             </label>
+            <label class="field">
+              <span>补充记录</span>
+              <textarea id="noteInput" name="note" rows="4" maxlength="240" placeholder="写下细节、感受、结果或者遇到的情况"></textarea>
+            </label>
             <div class="task-form__actions">
-              <button type="submit" class="primary-button" id="submitButton">新增任务</button>
+              <button type="submit" class="primary-button" id="submitButton">保存记录</button>
               <button type="button" class="ghost-button hidden" id="cancelEditBtn">取消编辑</button>
             </div>
             <p id="formMessage" class="form-message" aria-live="polite"></p>
@@ -152,18 +143,35 @@
         </section>
       </aside>
     </main>
+
+    <section class="records-panel glass-panel">
+      <div class="records-panel__header">
+        <div>
+          <p class="panel__eyebrow">Daily Entries</p>
+          <h2>当天记录列表</h2>
+          <p>按时间倒序排列，方便你回看这一天做过什么。</p>
+        </div>
+      </div>
+
+      <div id="emptyState" class="empty-state">
+        <div class="empty-state__art"></div>
+        <h3>这一天还没有记录</h3>
+        <p>右侧写下一条内容后，这里会开始累积当天的完成事项与日常片段。</p>
+      </div>
+      <ul id="recordList" class="task-list" aria-live="polite"></ul>
+    </section>
   </div>
 
-  <template id="taskItemTemplate">
-    <li class="task-item">
-      <button type="button" class="task-check action-toggle" aria-label="切换完成状态"></button>
+  <template id="recordItemTemplate">
+    <li class="task-item record-item">
+      <div class="record-bullet"></div>
       <div class="task-item__main">
         <div class="task-item__topline">
-          <span class="priority-badge"></span>
-          <span class="task-time"></span>
+          <span class="priority-badge record-category"></span>
+          <span class="task-time record-time"></span>
         </div>
-        <h3 class="task-title"></h3>
-        <p class="task-note hidden"></p>
+        <h3 class="task-title record-title"></h3>
+        <p class="task-note record-note hidden"></p>
       </div>
       <div class="task-item__actions">
         <button type="button" class="ghost-button ghost-button--compact action-edit">编辑</button>

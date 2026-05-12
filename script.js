@@ -1,43 +1,42 @@
-﻿const STORAGE_KEY = "daily-checkin-board-v1";
+const STORAGE_KEY = "todaygrid-monthly-records-v1";
 const AUDIO_STATE_KEY = "todaygrid-audio-state";
 
 const state = {
   selectedDate: getToday(),
-  tasksByDate: loadTasks(),
-  editingTaskId: null,
-  filter: "all",
+  viewMonth: getMonthStart(getToday()),
+  recordsByDate: loadRecords(),
+  editingRecordId: null,
 };
 
 const elements = {
-  datePicker: document.querySelector("#datePicker"),
+  currentMonthLabel: document.querySelector("#currentMonthLabel"),
+  activeDaysCount: document.querySelector("#activeDaysCount"),
+  entryCount: document.querySelector("#entryCount"),
+  selectedDateShort: document.querySelector("#selectedDateShort"),
+  calendarGrid: document.querySelector("#calendarGrid"),
   selectedDateLabel: document.querySelector("#selectedDateLabel"),
-  prevDayBtn: document.querySelector("#prevDayBtn"),
-  nextDayBtn: document.querySelector("#nextDayBtn"),
-  taskForm: document.querySelector("#taskForm"),
+  selectedDateHint: document.querySelector("#selectedDateHint"),
+  selectedEntryCount: document.querySelector("#selectedEntryCount"),
+  summaryPill: document.querySelector("#summaryPill"),
+  summaryText: document.querySelector("#summaryText"),
+  progressBar: document.querySelector("#progressBar"),
+  prevMonthBtn: document.querySelector("#prevMonthBtn"),
+  nextMonthBtn: document.querySelector("#nextMonthBtn"),
+  todayBtn: document.querySelector("#todayBtn"),
+  recordForm: document.querySelector("#recordForm"),
   titleInput: document.querySelector("#titleInput"),
+  categoryInput: document.querySelector("#categoryInput"),
   noteInput: document.querySelector("#noteInput"),
-  priorityInput: document.querySelector("#priorityInput"),
   submitButton: document.querySelector("#submitButton"),
   cancelEditBtn: document.querySelector("#cancelEditBtn"),
   formMessage: document.querySelector("#formMessage"),
-  taskList: document.querySelector("#taskList"),
+  recordList: document.querySelector("#recordList"),
   emptyState: document.querySelector("#emptyState"),
-  clearCompletedBtn: document.querySelector("#clearCompletedBtn"),
-  totalCount: document.querySelector("#totalCount"),
-  completedCount: document.querySelector("#completedCount"),
-  pendingCount: document.querySelector("#pendingCount"),
-  completionRate: document.querySelector("#completionRate"),
-  progressBar: document.querySelector("#progressBar"),
-  summaryPill: document.querySelector("#summaryPill"),
-  summaryText: document.querySelector("#summaryText"),
-  focusTaskTitle: document.querySelector("#focusTaskTitle"),
-  focusTaskHint: document.querySelector("#focusTaskHint"),
-  filterGroup: document.querySelector("#filterGroup"),
   audioToggleBtn: document.querySelector("#audioToggleBtn"),
   audioVolume: document.querySelector("#audioVolume"),
   audioStatus: document.querySelector("#audioStatus"),
   rainScene: document.querySelector("#rainScene"),
-  taskItemTemplate: document.querySelector("#taskItemTemplate"),
+  recordItemTemplate: document.querySelector("#recordItemTemplate"),
 };
 
 class RainScene {
@@ -451,7 +450,6 @@ const ambientAudio = new AmbientAudio({
 init();
 
 function init() {
-  elements.datePicker.value = state.selectedDate;
   bindEvents();
   rainScene.start();
   ambientAudio.restore();
@@ -459,13 +457,11 @@ function init() {
 }
 
 function bindEvents() {
-  elements.prevDayBtn.addEventListener("click", () => shiftDate(-1));
-  elements.nextDayBtn.addEventListener("click", () => shiftDate(1));
-  elements.datePicker.addEventListener("change", handleDateChange);
-  elements.taskForm.addEventListener("submit", handleTaskSubmit);
+  elements.prevMonthBtn.addEventListener("click", () => shiftMonth(-1));
+  elements.nextMonthBtn.addEventListener("click", () => shiftMonth(1));
+  elements.todayBtn.addEventListener("click", jumpToToday);
+  elements.recordForm.addEventListener("submit", handleRecordSubmit);
   elements.cancelEditBtn.addEventListener("click", resetForm);
-  elements.clearCompletedBtn.addEventListener("click", clearCompletedTasks);
-  elements.filterGroup.addEventListener("click", handleFilterClick);
   elements.audioToggleBtn.addEventListener("click", () => ambientAudio.toggle());
   elements.audioVolume.addEventListener("input", (event) => {
     ambientAudio.setVolume(Number(event.target.value) / 100);
@@ -473,315 +469,252 @@ function bindEvents() {
   window.addEventListener("resize", () => rainScene.resize());
 }
 
-function handleFilterClick(event) {
-  const button = event.target.closest("[data-filter]");
-  if (!button) {
-    return;
-  }
-
-  state.filter = button.dataset.filter;
+function shiftMonth(offset) {
+  state.viewMonth = addMonths(state.viewMonth, offset);
   render();
 }
 
-function handleDateChange(event) {
-  state.selectedDate = event.target.value || getToday();
+function jumpToToday() {
+  state.selectedDate = getToday();
+  state.viewMonth = getMonthStart(state.selectedDate);
   resetForm();
   render();
 }
 
-function shiftDate(offset) {
-  state.selectedDate = formatDate(addDays(new Date(`${state.selectedDate}T00:00:00`), offset));
-  elements.datePicker.value = state.selectedDate;
-  resetForm();
-  render();
-}
-
-function handleTaskSubmit(event) {
+function handleRecordSubmit(event) {
   event.preventDefault();
 
   const title = elements.titleInput.value.trim();
+  const category = elements.categoryInput.value;
   const note = elements.noteInput.value.trim();
-  const priority = elements.priorityInput.value;
 
   if (!title) {
-    setFormMessage("请输入任务名称");
+    setFormMessage("请输入当天做过的事情");
     elements.titleInput.focus();
     return;
   }
 
-  if (state.editingTaskId) {
-    updateTask(state.editingTaskId, { title, note, priority });
-    setFormMessage("任务已更新");
+  if (state.editingRecordId) {
+    updateRecord(state.editingRecordId, { title, category, note });
+    setFormMessage("记录已更新");
   } else {
-    const task = {
-      id: createTaskId(),
+    const record = {
+      id: createRecordId(),
       title,
+      category,
       note,
-      priority,
-      status: "pending",
       createdAt: new Date().toISOString(),
-      completedAt: "",
     };
-
-    getTasksForSelectedDate().unshift(task);
-    state.filter = "all";
-    setFormMessage("任务已新增");
+    getRecordsForSelectedDate().unshift(record);
+    setFormMessage("记录已保存");
   }
 
-  persistTasks();
+  persistRecords();
   resetForm();
   render();
 }
 
-function clearCompletedTasks() {
-  const tasks = getTasksForSelectedDate();
-  const hasCompleted = tasks.some((task) => task.status === "completed");
-
-  if (!hasCompleted) {
-    setFormMessage("当前日期没有已完成任务可清除");
-    return;
-  }
-
-  const confirmed = window.confirm("确认清除当前日期下所有已完成任务吗？");
-  if (!confirmed) {
-    return;
-  }
-
-  state.tasksByDate[state.selectedDate] = tasks.filter((task) => task.status !== "completed");
-  persistTasks();
-  render();
-  setFormMessage("已清除已完成任务");
-}
-
 function render() {
-  const allTasks = sortTasks(getTasksForSelectedDate());
-  const visibleTasks = filterTasks(allTasks, state.filter);
+  renderMonthHeader();
+  renderCalendar();
+  renderSelectedDay();
+  renderMonthStats();
+  renderDailySummary();
+  renderRecordList();
+}
 
+function renderMonthHeader() {
+  elements.currentMonthLabel.textContent = formatMonthLabel(state.viewMonth);
+  elements.selectedDateShort.textContent = formatDateShort(state.selectedDate);
+}
+
+function renderCalendar() {
+  const monthDates = buildCalendarDates(state.viewMonth);
+  const monthKey = state.viewMonth.slice(0, 7);
+  elements.calendarGrid.innerHTML = "";
+
+  monthDates.forEach((dateString) => {
+    const button = document.createElement("button");
+    const records = getRecordsForDate(dateString);
+    const isCurrentMonth = dateString.startsWith(monthKey);
+    const isSelected = dateString === state.selectedDate;
+    const isToday = dateString === getToday();
+
+    button.type = "button";
+    button.className = "calendar-day";
+    button.classList.toggle("is-outside", !isCurrentMonth);
+    button.classList.toggle("is-selected", isSelected);
+    button.classList.toggle("is-today", isToday);
+    button.classList.toggle("has-records", records.length > 0);
+    button.dataset.date = dateString;
+    button.innerHTML = `
+      <span class="calendar-day__number">${getDayNumber(dateString)}</span>
+      <span class="calendar-day__count">${records.length > 0 ? `${records.length} 条` : ""}</span>
+    `;
+    button.addEventListener("click", () => {
+      state.selectedDate = dateString;
+      resetForm();
+      render();
+    });
+    elements.calendarGrid.appendChild(button);
+  });
+}
+
+function renderSelectedDay() {
   elements.selectedDateLabel.textContent = formatDisplayDate(state.selectedDate);
-  elements.datePicker.value = state.selectedDate;
-  elements.taskList.innerHTML = "";
-  elements.emptyState.classList.toggle("hidden", visibleTasks.length > 0);
-  elements.clearCompletedBtn.disabled = !allTasks.some((task) => task.status === "completed");
-
-  syncFilterButtons();
-  visibleTasks.forEach(renderTaskItem);
-  renderStats(allTasks);
-  renderSummary(allTasks);
-  renderFocusTask(allTasks);
+  elements.selectedDateHint.textContent = "记录这一天真正做过的事情，而不是计划。";
 }
 
-function renderStats(tasks) {
-  const total = tasks.length;
-  const completed = tasks.filter((task) => task.status === "completed").length;
-  const pending = total - completed;
-  const rate = total === 0 ? 0 : Math.round((completed / total) * 100);
+function renderMonthStats() {
+  const monthPrefix = state.viewMonth.slice(0, 7);
+  const entries = Object.entries(state.recordsByDate).filter(([date]) => date.startsWith(monthPrefix));
+  const activeDays = entries.filter(([, records]) => Array.isArray(records) && records.length > 0).length;
+  const totalEntries = entries.reduce((sum, [, records]) => sum + records.length, 0);
 
-  elements.totalCount.textContent = String(total);
-  elements.completedCount.textContent = String(completed);
-  elements.pendingCount.textContent = String(pending);
-  elements.completionRate.textContent = `${rate}%`;
-  elements.progressBar.style.width = `${rate}%`;
+  elements.activeDaysCount.textContent = String(activeDays);
+  elements.entryCount.textContent = String(totalEntries);
 }
 
-function renderSummary(tasks) {
-  const total = tasks.length;
-  const completed = tasks.filter((task) => task.status === "completed").length;
-  const pending = total - completed;
+function renderDailySummary() {
+  const records = getRecordsForSelectedDate();
+  const count = records.length;
+  const monthlyPeak = Math.max(getMonthlyPeakCount(state.viewMonth), 1);
+  const progress = Math.min(Math.round((count / monthlyPeak) * 100), 100);
 
-  if (total === 0) {
-    elements.summaryPill.textContent = "刚开始";
-    elements.summaryText.textContent = "今天还没有任务，先添加一项开始吧。";
+  elements.selectedEntryCount.textContent = String(count);
+  elements.progressBar.style.width = `${progress}%`;
+
+  if (count === 0) {
+    elements.summaryPill.textContent = "空白";
+    elements.summaryText.textContent = "这一天还没有内容，可以从一件已完成的小事开始记录。";
     return;
   }
 
-  if (pending === 0) {
-    elements.summaryPill.textContent = "已清空";
-    elements.summaryText.textContent = `今晚一共完成了 ${completed} 项任务，节奏很完整。`;
+  if (count < 3) {
+    elements.summaryPill.textContent = "开始记录";
+    elements.summaryText.textContent = `这一天已经记录了 ${count} 条，继续补充会更完整。`;
     return;
   }
 
-  if (completed === 0) {
-    elements.summaryPill.textContent = "待启动";
-    elements.summaryText.textContent = `今天有 ${pending} 项任务待完成，先拿下一项最重要的。`;
+  if (count < 6) {
+    elements.summaryPill.textContent = "有内容";
+    elements.summaryText.textContent = `这一天已经沉淀了 ${count} 条记录，回顾起来会很清晰。`;
     return;
   }
 
-  elements.summaryPill.textContent = "推进中";
-  elements.summaryText.textContent = `已完成 ${completed} 项，还剩 ${pending} 项，继续保持这个雨夜里的专注感。`;
+  elements.summaryPill.textContent = "丰富";
+  elements.summaryText.textContent = `这一天已经留下 ${count} 条内容，是这个月里比较充实的一天。`;
 }
 
-function renderFocusTask(tasks) {
-  const pendingTasks = tasks.filter((task) => task.status !== "completed");
-  const focusTask = pendingTasks[0];
+function renderRecordList() {
+  const records = sortRecords(getRecordsForSelectedDate());
+  elements.recordList.innerHTML = "";
+  elements.emptyState.classList.toggle("hidden", records.length > 0);
 
-  if (!focusTask) {
-    elements.focusTaskTitle.textContent = "今天的任务已经全部完成";
-    elements.focusTaskHint.textContent = "可以切换日期回顾，或者提前把明天的重点记下来。";
-    return;
-  }
+  records.forEach((record) => {
+    const fragment = elements.recordItemTemplate.content.cloneNode(true);
+    const item = fragment.querySelector(".record-item");
+    const category = fragment.querySelector(".record-category");
+    const time = fragment.querySelector(".record-time");
+    const title = fragment.querySelector(".record-title");
+    const note = fragment.querySelector(".record-note");
+    const editBtn = fragment.querySelector(".action-edit");
+    const deleteBtn = fragment.querySelector(".action-delete");
 
-  elements.focusTaskTitle.textContent = focusTask.title;
-  elements.focusTaskHint.textContent = focusTask.note || `${getPriorityLabel(focusTask.priority)}，建议先把这件事推进一小步。`;
-}
+    item.dataset.id = record.id;
+    category.dataset.category = record.category;
+    category.textContent = getCategoryLabel(record.category);
+    time.textContent = formatTime(record.createdAt);
+    title.textContent = record.title;
 
-function renderTaskItem(task) {
-  const fragment = elements.taskItemTemplate.content.cloneNode(true);
-  const item = fragment.querySelector(".task-item");
-  const badge = fragment.querySelector(".priority-badge");
-  const time = fragment.querySelector(".task-time");
-  const title = fragment.querySelector(".task-title");
-  const note = fragment.querySelector(".task-note");
-  const toggleBtn = fragment.querySelector(".action-toggle");
-  const editBtn = fragment.querySelector(".action-edit");
-  const deleteBtn = fragment.querySelector(".action-delete");
+    if (record.note) {
+      note.textContent = record.note;
+      note.classList.remove("hidden");
+    }
 
-  item.dataset.id = task.id;
-  item.classList.toggle("is-complete", task.status === "completed");
+    editBtn.addEventListener("click", () => startEditRecord(record.id));
+    deleteBtn.addEventListener("click", () => deleteRecord(record.id));
 
-  badge.dataset.priority = task.priority;
-  badge.textContent = getPriorityLabel(task.priority);
-  time.textContent = getTaskTimeLabel(task);
-  title.textContent = task.title;
-  toggleBtn.title = task.status === "completed" ? "取消完成" : "打卡完成";
-  toggleBtn.setAttribute("aria-label", task.status === "completed" ? "取消完成" : "打卡完成");
-
-  if (task.note) {
-    note.textContent = task.note;
-    note.classList.remove("hidden");
-  }
-
-  toggleBtn.addEventListener("click", () => toggleTask(task.id));
-  editBtn.addEventListener("click", () => startEditTask(task.id));
-  deleteBtn.addEventListener("click", () => deleteTask(task.id));
-
-  elements.taskList.appendChild(fragment);
-}
-
-function syncFilterButtons() {
-  const buttons = elements.filterGroup.querySelectorAll("[data-filter]");
-  buttons.forEach((button) => {
-    button.classList.toggle("is-active", button.dataset.filter === state.filter);
+    elements.recordList.appendChild(fragment);
   });
 }
 
-function filterTasks(tasks, filter) {
-  if (filter === "pending") {
-    return tasks.filter((task) => task.status !== "completed");
-  }
-
-  if (filter === "completed") {
-    return tasks.filter((task) => task.status === "completed");
-  }
-
-  return tasks;
-}
-
-function sortTasks(tasks) {
-  const priorityWeight = { high: 0, medium: 1, low: 2 };
-
-  return [...tasks].sort((a, b) => {
-    if (a.status !== b.status) {
-      return a.status === "completed" ? 1 : -1;
-    }
-
-    const priorityDiff = (priorityWeight[a.priority] ?? 9) - (priorityWeight[b.priority] ?? 9);
-    if (priorityDiff !== 0) {
-      return priorityDiff;
-    }
-
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  });
-}
-
-function toggleTask(taskId) {
-  const task = findTask(taskId);
-  if (!task) {
+function startEditRecord(recordId) {
+  const record = findRecord(recordId);
+  if (!record) {
     return;
   }
 
-  const isCompleted = task.status === "completed";
-  task.status = isCompleted ? "pending" : "completed";
-  task.completedAt = isCompleted ? "" : new Date().toISOString();
-
-  persistTasks();
-  render();
-}
-
-function startEditTask(taskId) {
-  const task = findTask(taskId);
-  if (!task) {
-    return;
-  }
-
-  state.editingTaskId = taskId;
-  elements.titleInput.value = task.title;
-  elements.noteInput.value = task.note;
-  elements.priorityInput.value = task.priority;
+  state.editingRecordId = recordId;
+  elements.titleInput.value = record.title;
+  elements.categoryInput.value = record.category;
+  elements.noteInput.value = record.note;
   elements.submitButton.textContent = "保存修改";
   elements.cancelEditBtn.classList.remove("hidden");
-  setFormMessage("正在编辑任务");
+  setFormMessage("正在编辑当天记录");
   elements.titleInput.focus();
 }
 
-function updateTask(taskId, payload) {
-  const task = findTask(taskId);
-  if (!task) {
+function updateRecord(recordId, payload) {
+  const record = findRecord(recordId);
+  if (!record) {
     return;
   }
 
-  task.title = payload.title;
-  task.note = payload.note;
-  task.priority = payload.priority;
+  record.title = payload.title;
+  record.category = payload.category;
+  record.note = payload.note;
 }
 
-function deleteTask(taskId) {
-  const confirmed = window.confirm("确认删除该任务吗？");
+function deleteRecord(recordId) {
+  const confirmed = window.confirm("确认删除这条当天记录吗？");
   if (!confirmed) {
     return;
   }
 
-  state.tasksByDate[state.selectedDate] = getTasksForSelectedDate().filter((task) => task.id !== taskId);
-
-  if (state.editingTaskId === taskId) {
+  state.recordsByDate[state.selectedDate] = getRecordsForSelectedDate().filter((record) => record.id !== recordId);
+  if (state.editingRecordId === recordId) {
     resetForm();
   }
-
-  persistTasks();
+  persistRecords();
   render();
-  setFormMessage("任务已删除");
+  setFormMessage("记录已删除");
 }
 
 function resetForm() {
-  state.editingTaskId = null;
-  elements.taskForm.reset();
-  elements.priorityInput.value = "medium";
-  elements.submitButton.textContent = "新增任务";
+  state.editingRecordId = null;
+  elements.recordForm.reset();
+  elements.categoryInput.value = "work";
+  elements.submitButton.textContent = "保存记录";
   elements.cancelEditBtn.classList.add("hidden");
   setFormMessage("");
 }
 
-function findTask(taskId) {
-  return getTasksForSelectedDate().find((task) => task.id === taskId);
+function getRecordsForSelectedDate() {
+  return getRecordsForDate(state.selectedDate);
 }
 
-function getTasksForSelectedDate() {
-  if (!state.tasksByDate[state.selectedDate]) {
-    state.tasksByDate[state.selectedDate] = [];
+function getRecordsForDate(dateString) {
+  if (!state.recordsByDate[dateString]) {
+    state.recordsByDate[dateString] = [];
   }
-
-  return state.tasksByDate[state.selectedDate];
+  return state.recordsByDate[dateString];
 }
 
-function persistTasks() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.tasksByDate));
+function findRecord(recordId) {
+  return getRecordsForSelectedDate().find((record) => record.id === recordId);
 }
 
-function loadTasks() {
+function persistRecords() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.recordsByDate));
+}
+
+function loadRecords() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : {};
   } catch (error) {
-    console.error("Failed to read local tasks:", error);
+    console.error("Failed to read local records:", error);
     return {};
   }
 }
@@ -790,27 +723,50 @@ function setFormMessage(message) {
   elements.formMessage.textContent = message;
 }
 
-function createTaskId() {
+function sortRecords(records) {
+  return [...records].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+function createRecordId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
 }
 
-function getPriorityLabel(priority) {
+function getCategoryLabel(category) {
   const labels = {
-    high: "高优先级",
-    medium: "中优先级",
-    low: "低优先级",
+    work: "工作 / 学习",
+    life: "生活",
+    health: "健康",
+    idea: "想法 / 灵感",
   };
-
-  return labels[priority] || "普通";
+  return labels[category] || "记录";
 }
 
-function getTaskTimeLabel(task) {
-  const createdAt = formatTime(task.createdAt);
-  if (task.status === "completed" && task.completedAt) {
-    return `创建于 ${createdAt} · 完成于 ${formatTime(task.completedAt)}`;
+function getMonthlyPeakCount(monthDate) {
+  const monthPrefix = monthDate.slice(0, 7);
+  return Object.entries(state.recordsByDate)
+    .filter(([date]) => date.startsWith(monthPrefix))
+    .reduce((peak, [, records]) => Math.max(peak, records.length), 0);
+}
+
+function buildCalendarDates(monthString) {
+  const firstDay = new Date(`${monthString}-01T00:00:00`);
+  const firstWeekday = (firstDay.getDay() + 6) % 7;
+  const startDate = addDaysToDate(firstDay, -firstWeekday);
+  const dates = [];
+
+  for (let index = 0; index < 42; index += 1) {
+    dates.push(formatDate(addDaysToDate(startDate, index)));
   }
 
-  return `创建于 ${createdAt}`;
+  return dates;
+}
+
+function formatMonthLabel(monthString) {
+  const date = new Date(`${monthString}-01T00:00:00`);
+  return new Intl.DateTimeFormat("zh-CN", {
+    year: "numeric",
+    month: "long",
+  }).format(date);
 }
 
 function formatDisplayDate(dateString) {
@@ -823,11 +779,33 @@ function formatDisplayDate(dateString) {
   }).format(date);
 }
 
+function formatDateShort(dateString) {
+  const date = new Date(`${dateString}T00:00:00`);
+  return new Intl.DateTimeFormat("zh-CN", {
+    month: "numeric",
+    day: "numeric",
+  }).format(date);
+}
+
 function formatTime(dateString) {
   return new Intl.DateTimeFormat("zh-CN", {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(dateString));
+}
+
+function getMonthStart(dateString) {
+  return dateString.slice(0, 7);
+}
+
+function getDayNumber(dateString) {
+  return String(new Date(`${dateString}T00:00:00`).getDate());
+}
+
+function addMonths(monthString, offset) {
+  const date = new Date(`${monthString}-01T00:00:00`);
+  date.setMonth(date.getMonth() + offset);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 }
 
 function getToday() {
@@ -841,7 +819,7 @@ function formatDate(date) {
   return `${year}-${month}-${day}`;
 }
 
-function addDays(date, amount) {
+function addDaysToDate(date, amount) {
   const copy = new Date(date);
   copy.setDate(copy.getDate() + amount);
   return copy;
