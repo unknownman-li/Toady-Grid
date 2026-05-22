@@ -14,13 +14,11 @@
     <header class="masthead glass-panel">
       <div class="masthead__brand">
         <p class="hero__eyebrow">TodayGrid</p>
-        <h1>Rainy Focus Workspace</h1>
+        <h1>今日任务工作台</h1>
       </div>
-      <p class="masthead__summary">在偏冷的蓝色雨夜里安排任务、推进进度、保留专注。这个界面把清单放到正中央，其余信息只做必要辅助。</p>
+      <p class="masthead__summary">安排、筛选、完成今天的任务。雨声保留在背景里，主界面只服务行动。</p>
       <div class="masthead__meta">
-        <span class="hero__meta-chip">Blue Rain UI</span>
-        <span class="hero__meta-chip">Local First</span>
-        <span class="hero__meta-chip">Ambient Focus</span>
+        <a class="primary-button masthead__quick-add" href="#titleInput">新增任务</a>
       </div>
     </header>
 
@@ -28,9 +26,9 @@
       <section class="task-board glass-panel">
         <div class="board-intro">
           <div class="board-intro__copy">
-            <p class="panel__eyebrow">Workspace</p>
+            <p class="panel__eyebrow">Tasks</p>
             <h2>任务清单</h2>
-            <p>未完成任务会自动排在前面，高优先级事项更醒目。这里是整个页面的主工作区。</p>
+            <p>未完成任务优先显示，高优先级会排在更前面。</p>
           </div>
           <div class="board-intro__focus">
             <span class="board-intro__label">当前焦点</span>
@@ -66,13 +64,45 @@
 
         <div id="emptyState" class="empty-state">
           <div class="empty-state__art"></div>
-          <h3>今晚的清单还没开始</h3>
-          <p>从第一件要推进的事情开始，任务区会立刻接管这个页面。</p>
+          <h3>今天还没有任务</h3>
+          <p>从右侧新增第一项，清单会自动按状态和优先级整理。</p>
         </div>
         <ul id="taskList" class="task-list" aria-live="polite"></ul>
       </section>
 
       <aside class="sidebar glass-panel">
+        <section class="sidebar__section panel--composer">
+          <div class="panel__header sidebar__header sidebar__header--compact">
+            <div>
+              <p class="panel__eyebrow">Compose</p>
+              <h2>新增任务</h2>
+            </div>
+          </div>
+          <form id="taskForm" class="task-form">
+            <label class="field">
+              <span>任务名称</span>
+              <input type="text" id="titleInput" name="title" maxlength="80" placeholder="例如：完成产品原型图" required>
+            </label>
+            <label class="field">
+              <span>任务备注</span>
+              <textarea id="noteInput" name="note" rows="3" maxlength="200" placeholder="补充说明、截止时间或执行步骤"></textarea>
+            </label>
+            <label class="field">
+              <span>优先级</span>
+              <select id="priorityInput" name="priority">
+                <option value="high">高优先级</option>
+                <option value="medium" selected>中优先级</option>
+                <option value="low">低优先级</option>
+              </select>
+            </label>
+            <div class="task-form__actions">
+              <button type="submit" class="primary-button" id="submitButton">新增任务</button>
+              <button type="button" class="ghost-button hidden" id="cancelEditBtn">取消编辑</button>
+            </div>
+            <p id="formMessage" class="form-message" aria-live="polite"></p>
+          </form>
+        </section>
+
         <section class="sidebar__section sidebar__section--date">
           <div class="panel__header sidebar__header">
             <div>
@@ -105,9 +135,10 @@
         <section class="sidebar__section panel--audio" aria-label="雨天氛围音乐">
           <div class="panel__header sidebar__header sidebar__header--compact">
             <div>
-              <p class="panel__eyebrow">Atmosphere</p>
-              <h2>雨天氛围音</h2>
+              <p class="panel__eyebrow">Sound</p>
+              <h2>专注声音</h2>
             </div>
+            <span class="audio-source-pill">本地生成</span>
           </div>
           <div class="audio-widget">
             <button type="button" class="primary-button" id="audioToggleBtn">开启氛围音</button>
@@ -116,39 +147,11 @@
               <input type="range" id="audioVolume" min="0" max="100" value="40">
             </div>
             <p id="audioStatus" class="audio-status">当前已静音。点击后会播放雨声、低频环境铺底和柔和和声。</p>
-          </div>
-        </section>
-
-        <section class="sidebar__section panel--composer">
-          <div class="panel__header sidebar__header sidebar__header--compact">
-            <div>
-              <p class="panel__eyebrow">Compose</p>
-              <h2>新增任务</h2>
+            <div class="daily-track-preview">
+              <span>每日推荐</span>
+              <strong>可接入音乐 API 后显示</strong>
             </div>
           </div>
-          <form id="taskForm" class="task-form">
-            <label class="field">
-              <span>任务名称</span>
-              <input type="text" id="titleInput" name="title" maxlength="80" placeholder="例如：完成产品原型图" required>
-            </label>
-            <label class="field">
-              <span>任务备注</span>
-              <textarea id="noteInput" name="note" rows="3" maxlength="200" placeholder="补充说明、截止时间或执行步骤"></textarea>
-            </label>
-            <label class="field">
-              <span>优先级</span>
-              <select id="priorityInput" name="priority">
-                <option value="high">高优先级</option>
-                <option value="medium" selected>中优先级</option>
-                <option value="low">低优先级</option>
-              </select>
-            </label>
-            <div class="task-form__actions">
-              <button type="submit" class="primary-button" id="submitButton">新增任务</button>
-              <button type="button" class="ghost-button hidden" id="cancelEditBtn">取消编辑</button>
-            </div>
-            <p id="formMessage" class="form-message" aria-live="polite"></p>
-          </form>
         </section>
       </aside>
     </main>
